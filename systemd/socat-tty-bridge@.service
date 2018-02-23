@@ -1,0 +1,15 @@
+[Unit]
+Description=Socat tty bridge
+
+[Service]
+Type=simple
+Restart=always
+
+StartLimitInterval=10s
+StartLimitBurst=25
+RestartSec=500ms
+
+ExecStart=/usr/bin/socat UNIX-LISTEN:/dev/unix-%I,unlink-early  PTY,unlink-early,link=/dev/tty-%I,group=tester,mode=775
+
+[Install]
+WantedBy=multi-user.target

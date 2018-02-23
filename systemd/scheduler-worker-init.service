@@ -1,0 +1,9 @@
+[Unit]
+Description=Scheduler Worker init service
+Requires=postgresql-9.5.service
+After=postgresql-9.5.service
+
+[Service]
+Type=oneshot
+
+ExecStart=/usr/libexec/scheduler-worker-init.sh

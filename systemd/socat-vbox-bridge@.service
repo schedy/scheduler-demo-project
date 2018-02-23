@@ -1,0 +1,17 @@
+[Unit]
+Description=VirtualBox socat unix socket to tty bridge
+Before=vboxdrv.service
+Requires=vboxdrv.service
+
+[Service]
+Type=simple
+Restart=always
+
+StartLimitInterval=10s
+StartLimitBurst=25
+RestartSec=500ms
+
+ExecStart=/usr/bin/socat UNIX-LISTEN:/dev/unix-%I,group=tester,mode=775,unlink-early PTY,link=/dev/tty-%I,group=tester,mode=775,unlink-early
+
+[Install]
+WantedBy=multi-user.target
