@@ -1,0 +1,19 @@
+require 'sprockets/rails/task'
+
+
+namespace 'assets' do
+	
+	desc 'Precompile assets'
+	task :precompile do
+		output_dir = 'compiled'
+		(Dir[output_dir+'/project*css*'] + Dir[output_dir+'/project*js*']).each { |file| FileUtils.rm(file) }
+		env = Sprockets::Environment.new(Dir.pwd)
+		env.config = env.config.merge(paths: [Dir.pwd+'/stylesheets',Dir.pwd+'/javascripts']).freeze
+		Sprockets::Manifest.new(env, output_dir+'/project.json').compile("project.css","project.js")
+		JSON.load(open(output_dir+'/project.json').read)["assets"].each_pair { |link_name, link_target|
+			FileUtils.ln_s(link_target,output_dir+'/'+link_name)
+		}
+	end
+	
+end
+

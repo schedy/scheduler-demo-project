@@ -1,0 +1,4 @@
+#!/bin/bash
+
+PID=$(machinectl status f26_scheduler_server | grep Leader | awk '{print $2}')
+nsenter -m -u -i -n -p -t $PID  /bin/bash -c "$@"

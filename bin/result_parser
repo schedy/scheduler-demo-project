@@ -1,0 +1,26 @@
+#!/bin/env ruby
+
+require 'bundler/setup'
+require 'teresa'
+require 'json'
+def parseXUnit(source_path)
+  if not File.file?(source_path)
+    puts 'Invalid argument !'
+  end
+  outgoing = []
+  tests = Teresa.parse_file(source_path)
+  tests.each { |z|
+    outgoing.push({
+                    "id"=> z.id,
+                    "name"=>  z.name,
+                    "output"=> z.output,
+                    "result"=>  z.state,
+                    "time"=> z.time,
+                    "reason"=>  z.message
+                  })
+  }
+  puts JSON.generate(outgoing)
+  JSON.generate(outgoing)
+
+end
+parseXUnit(ARGV[0])

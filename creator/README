@@ -1,0 +1,207 @@
+Test Configuration File for CI 
+
+This creator expects that obs packags have a test configuration file to run their tests in CI in Schedy.
+
+Schedy first downloads and parses test configuration, and acts accordingly.
+
+General structure of Test Configuration JSON is given below, fields explained with inline comments.
+
+ 
+
+{
+    //<string> event-type:
+    //Describes how testing event has triggered. Each testing event belong to a single particular event type. Event types can inherit all their configuration from each other, defined by following "include" field. In most projects, there is a one "common" event-type definition and other event-types inherit from "common" take it as defaults.
+
+    //Possible event types are :
+    //gerrit_pull_request: Implies that testing event is triggered by each new patch-set in gerrit.
+    //master_merge: Implies that testing event is triggered by a submitted/merged patch in gerrit.
+    //nightly: Implies that testing event is triggered by a nightly testing
+    //manual: Implies that testing event is triggered manually by CI.
+    //obs_submit_request:  Implies that testing event is triggered by a gating process, such as promotion from development to testing, in OBS.
+    "common": {
+
+        //<array> required-packages:
+        //The packages which contain the tested software (SUT, software under test) in OBS.
+        //'arch' (architecture that OBS builds in, often i586) and 'repo' (environment that OBS builds in, often fedora_23) are possible arguments.
+        "required-packages": [
+            {"name": "software-001","arch":"i586","repo":"fedora_23"},
+            {"name": "software-002" ,"arch":"i586","repo":"fedora_23"}
+        ],
+
+
+        //test-packages:
+        //The packages which contain the tests to be executed.
+        "test-packages": {
+
+
+            //package-name:
+            //Name of the project which contains tests.
+            "software-002": {
+
+
+                //robot-package-name:
+                //Name of the particular package which includes robot tests.
+                "software-002-robot-tests": {
+
+
+                    //'arch' and 'repo' are flavours of test package
+                    //They are set in OBS and mostly same with required-packages' flavours.
+                    "arch":"i586",
+                    "repo":"fedora_23",
+
+
+                    //<array> environment-vars:
+                    //Environment variables to apply before test execution.
+                    "environment-vars": ["<%='PYTHONPATH='+ task_dir %>"],
+
+
+                    //priority:
+                    //Execution priority for tests. Higher numbers indicate higher priority.
+                    "priority": 10,
+
+
+                    //<array> command-line:
+                    //Exact command to be run for test execution.
+                    //Using ERB templating and Ruby language, variables are resolved internally in schedy worker.
+                    //Several variables, such as task_dir and test_name are already exposed to developers.
+                    //For an introduction for ERB : http://www.stuartellis.name/articles/erb/
+                    "command-line": ["/usr/bin/pybot",
+                                     "-Ldebug",
+                                     "-x xunit.xml", //A special flag in robot-framework test cases, which provides results in xunit format. This allows scheduler to pickup and publish test results. Please do not remove this parameter from robot test cases if you wish test results to be published.
+                                     "<%='--outputdir '+task_dir %>",
+                                     "<%='--test '+test_name %>",
+                                     "<%=task_dir+'/usr/share/software-002/robot/'%>"],
+
+
+                    //test-environments:
+                    //Variants of hardware, software or other parameters of test setup.
+                    //In the example below, software-002 project has two hardware variants, which require different hardware and software for testing, namely DUT_001 and DUT_002.
+                    //Their use of different software is reflected in their regexps.
+                    "test-environments": {
+
+
+                        "DUT_001": {
+
+
+                            //<array> tags-reject:
+                            //Test cases with given tags in this field will not be added to the execution.
+                            "tags-reject": ["NotReady"],
+
+
+                            //<array> tags-intersect:
+                            //Only test cases with given tags in this field will be added to the execution.    
+                            "tags-intersect": ["Ready"],                                                
+
+
+                            //default-role-options:
+                            //Options below will be applied to resources with given role.
+                            "default-role-options": {
+
+
+                                //role-name: 
+                                //Role name is parsed from tags in robot-framework test cases.
+                                //Options below are applied as initial defaults to resources with this particular role name. It is also possible to override this set of options by defining them in robot-framework tags.
+                                "DUT_FOO": {
+
+
+                                    //default options:
+                                    //Options which can be overriden by robot test case tags.
+                                    //flashables: comma seperated name values of flashable units.
+                                    //<! IMPORTANT !>  package and image suffixes below must be preceded by the flashable which they define, such as dut001-package and dut001-image.
+                                    //-package suffix : used as a regexp to catch a package includes image to flash.
+                                    //-image suffix : used as a regexp to catch image to flash, from -package contents.                                  
+                                    "flashables": "dut001,dut002",
+                                    "dut001-image": "software-002-dut001",
+                                    "dut001-package": "(software-002).*(?!.*robot-tests).*(noarch|i686).*$",
+                                    "dut002-image": "software-001-dut002",
+                                    "dut002-package": "(software-001).*(?!.robot-tests).*(noarch|i686).*$"
+                                }
+                            }
+                        },
+                        "DUT_002": {
+                            "default-role-options": {
+                                "DUT_BAR": {
+                                    "flashables": "dut003",
+                                    "dut003-image": "software-002-dut003",
+                                    "dut003-package": "(software-002).*(?!.*robot-tests).*(noarch|i686).*$"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+
+    //Below are other event types which inherit their settings from 'common' event type.
+    "manual": {
+
+
+        //<array> include:
+        //Array of target event types to inherit from. It is possible to inherit from multiple event types, later event types overriding preceding ones.
+        "include": ["common"],
+
+
+        "test-packages": {
+            "software-002": {
+                "software-002-robot-tests": {
+                    "priority": 1
+                }
+            }
+        }
+    },
+    "master_merge": {
+        "include": ["common"],
+        "test-packages": {
+            "software-002": {
+                "software-002-robot-tests": {
+                    "priority": 15
+                }
+            }
+        }
+    },
+    "gerrit_pull_request": {
+        "include": ["common"],
+        "test-packages": {
+            "software-002": {
+                "software-002-robot-tests": {
+                    "priority": 100
+                }
+            }
+        }
+    },
+    "obs_submit_request": {
+        "include": ["common"],
+        "test-packages": {
+            "software-002": {
+                "software-002-robot-tests": {
+                    "priority": 20
+                }
+            }
+        }
+    },
+    "nightly": {
+        "include": ["common"],
+        "test-packages": {
+            "software-002": {
+                "software-002-robot-tests": {
+                    "priority": 10
+                }
+            }
+        }
+    }
+}
+
+
+Notice Googletests have different names and additions:
+RF: "tags-intersect"
+GT: "testcases-intersect"
+
+RF: "tags-reject"
+GT: "testcases-reject"
+
+"executor":["googletest.rb"]
+"google-test-exec": "/path/to/google_test_binary"
+
+
+

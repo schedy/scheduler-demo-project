@@ -1,0 +1,13 @@
+[Unit]
+Description=Scheduler init service
+Before=scheduler-seapig-server.service
+Requires=postgresql-9.5.service
+After=postgresql-9.5.service
+
+[Service]
+Type=oneshot
+
+ExecStart=/usr/libexec/scheduler-init.sh
+
+[Install]
+RequiredBy=scheduler-seapig-server.service
