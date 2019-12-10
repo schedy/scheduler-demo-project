@@ -1,0 +1,10 @@
+source 'https://rubygems.org'
+
+gem 'rest-client'
+gem 'awesome_print'
+gem 'json'
+gem 'pg', '~> 0.18'
+gem 'daemons'
+gem 'typhoeus'
+gem 'rails', '5.0.6'
+gem 'seapig-postgresql-notifier'

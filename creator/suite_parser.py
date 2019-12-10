@@ -13,8 +13,21 @@ def print_suite(suite):
         if test is not None:
             tmp = {"name": '',"tags": [],"suite": str(suite.name),"steps":[]}
             tmp["name"] = str(test.name).replace(" ", "_")
-            for tag in test.tags:
-                tmp["tags"].append(str(tag))
+            #for tag in test.tags:
+            #    tmp["tags"].append(str(tag))
+            append_state = True
+            for tag_str in test.tags:
+                if append_state:
+                    tmp["tags"].append(tag_str)
+                else:
+                    tmp["tags"][-1] += " " + tag_str
+
+                if "{" in tag_str and "}" not in tag_str:
+                    if not append_state: tmp["tags"].append("ERROR State machine (1) broken")
+                    append_state = False
+                elif "}" in tag_str and "{" not in tag_str:
+                    if append_state: tmp["tags"].append("ERROR State machine (2) broken")
+                    append_state = True
             for step in test.steps:
                 try:
                     tmp["steps"].append(str(step.name))
@@ -35,3 +48,4 @@ def get_suites(folder):
 
 if __name__ == '__main__':
     print_suites(sys.argv[1])
+

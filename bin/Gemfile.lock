@@ -1,0 +1,19 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    json (2.1.0)
+    mini_portile2 (2.2.0)
+    nokogiri (1.8.0)
+      mini_portile2 (~> 2.2.0)
+    teresa (0.1.0)
+      nokogiri (~> 1.5)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  json
+  teresa
+
+BUNDLED WITH
+   1.13.7
