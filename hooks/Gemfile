@@ -1,0 +1,9 @@
+source 'https://rubygems.org'
+
+gem 'rest-client'
+gem 'awesome_print'
+gem 'json'
+gem 'bunny'
+gem 'rails', '5.0.6'
+gem 'pg', '~> 0.18'
+gem 'teresa'

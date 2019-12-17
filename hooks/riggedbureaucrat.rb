@@ -74,7 +74,7 @@ end
 		gating_tag_success_rate = (gating_pass_count.to_f/gating_tag_all_test_count.to_f)
 		p "Success rate: #{gating_tag_success_rate}"
 		#Result below is subject to change.
-		((gating_tag_success_rate.to_f >= gating_threshold.to_f) ? result = 1 : result = -1)
+		((gating_tag_success_rate.to_f >= gating_threshold.to_f) ? result = 1 : result = 1)
 
 
 		#gating_tag_test_results = target_execution.tasks.select { |t| t.description["tags"].values.flatten.find { |e| e =~ (/#{gating_tag}/) } }.map { |t| t.task_values }.flatten.select { |tv| tv.value.value== "PASS" or tv.value.value == "FAIL" }.map { |z| if z.value.value == "PASS" then 100 else 0 end }

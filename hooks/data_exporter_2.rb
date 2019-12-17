@@ -1,43 +1,39 @@
 #!/bin/env ruby
 
-exit 0
-
 require '../../config/environment.rb'
 
 require 'rest-client'
 require 'json'
 
-SERVER_URL = "http://data-warehouse/"
+SERVER_URL = "http://dashboard/"
 
 
 def upload(file_name)
-	puts JSON.parse(RestClient::Request.new(method: :post, url: SERVER_URL + 'processors/nightly-2/process', payload: {multipart: true, file: File.new(file_name)}).execute.body)
+	puts JSON.parse(RestClient::Request.new(method: :post, url: SERVER_URL + 'data/schedy-execution-1', payload: {multipart: true, file: File.new(file_name)}).execute.body)
 end
 
 def export_data(execution_id, path)
-	origin_property_id = Property.find_by(name: "eventtype").id
-	nightly_value_id = Value.find_by(value: 'nightly', property_id: origin_property_id).id
-
-	execution = Execution.where("id = ?", execution_id).includes(execution_values: [], tasks: {task_values: [:value]}).select { |execution|
-		execution.execution_values.find { |execution_value| execution_value.value_id == nightly_value_id }
-        }[0]
-
-	if not execution
-		puts "Nothing to do, #{execution_id} is not a nightly!"
-		exit
-	end
+	eventtype_property_id = Property.find_by(name: "eventtype").id
+	execution = Execution.includes(execution_values: { value: [:property] }, tasks: {task_values: [:value]}).find(execution_id)
 
 	data = {
 		id: execution_id,
 		created_at: execution.created_at,
 		tags: execution.execution_values.map { |execution_value| [execution_value.value.property.name, execution_value.value.value] },
-		tasks: execution.tasks.map { |task| 
+		workitem: execution.data,
+		tasks: execution.tasks.map { |task|
+			measurements = {}
+			task.artifacts.where("name like 'measurement_%'").each { |artifact|
+				(measurements[artifact.name.split("_",2)[1]] ||= []) << artifact.data
+			}
 			{
 				id: task.id,
 				created_at: task.created_at,
 				status: task.status.status,
 				tags: task.task_values.map { |task_value| [task_value.value.property.name, task_value.value.value] },
-				archives: task.description["archives"]
+				archives: task.description["archives"],
+				resources: task.resource_statuses.map { |resource_status| { worker: resource_status.resource.worker.name, remote_id: resource_status.resource.remote_id, description: resource_status.description } },
+				measurements: measurements
 			}
 		}
 	}
@@ -62,4 +58,3 @@ if status == "finished"
 		}
 	}
 end
-

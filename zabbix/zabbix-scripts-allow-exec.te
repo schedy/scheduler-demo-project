@@ -1,0 +1,11 @@
+
+module zabbix-scripts-allow-exec 1.0;
+
+require {
+	type zabbix_script_exec_t;
+	type zabbix_agent_t;
+	class file execute;
+}
+
+#============= zabbix_agent_t ==============
+allow zabbix_agent_t zabbix_script_exec_t:file execute;
