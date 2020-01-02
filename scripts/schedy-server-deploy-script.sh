@@ -216,7 +216,7 @@ bundle_install_local()
 
 create_tarballs()
 {
-    run_command_in_server_folder "rake build:tarball"
+    run_command_in_server_folder "bundle exec rake build:tarball"
     pushd ${PROJECT_GIT_PATH}/deploy-server
     tar ${VERBOSE_TAR} -c -j --exclude=deploy-server/scheduler-server-project.tar.bz2 --exclude=docker-* --exclude=.bundle -f  scheduler-server-project.tar.bz2  ../*
 }
